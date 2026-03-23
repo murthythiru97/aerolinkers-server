@@ -69,7 +69,7 @@ app.jinja_loader = DictLoader(
   </head>
   <body>
     <nav class=\"navbar navbar-expand-lg navbar-light bg-white shadow-sm\">
-      <div class=\"container\">
+      <div class=\"container-xl\">
         <a class=\"navbar-brand brand\" href=\"{{ url_for('dashboard') }}\">Airport Smart Band</a>
         <div class=\"collapse navbar-collapse\">
           <ul class=\"navbar-nav ms-auto\">
@@ -83,7 +83,7 @@ app.jinja_loader = DictLoader(
       </div>
     </nav>
 
-    <main class=\"container py-5\">
+    <main class=\"container-xl py-5\">
       {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
       <div class=\"row justify-content-center mb-4\">
@@ -241,6 +241,13 @@ app.jinja_loader = DictLoader(
         <p><strong>Flight:</strong> {{ passenger[2] }}</p>
         <p><strong>Seat:</strong> {{ passenger[3] }}</p>
         <p><strong>Boarding Time:</strong> {{ passenger[4] }}</p>
+        <p><strong>Device:</strong> {{ passenger[5] or '-' }}</p>
+        <div class=\"mt-3\">
+          <form method="post" action="{{ url_for('delete_passenger') }}" class="d-inline">
+            <input type="hidden" name="passenger_id" value="{{ passenger[0] }}">
+            <button class="btn btn-outline-danger btn-sm" type="submit" onclick="return confirm('Are you sure you want to delete this passenger?')">Delete Passenger</button>
+          </form>
+        </div>
       </div>
     </div>
   </div>
@@ -257,6 +264,9 @@ app.jinja_loader = DictLoader(
           </li>
           <li class=\"nav-item\">
             <a class=\"nav-link\" data-bs-toggle=\"tab\" href=\"#flights\" role=\"tab\">Flights</a>
+          </li>
+          <li class=\"nav-item\">
+            <a class=\"nav-link\" data-bs-toggle=\"tab\" href=\"#passengers\" role=\"tab\">Passengers</a>
           </li>
           <li class=\"nav-item\">
             <a class=\"nav-link\" data-bs-toggle=\"tab\" href=\"#notifications\" role=\"tab\">Notifications</a>
@@ -277,6 +287,7 @@ app.jinja_loader = DictLoader(
                   <th>Battery</th>
                   <th>Signal</th>
                   <th>Last Seen</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -288,11 +299,39 @@ app.jinja_loader = DictLoader(
                   <td>{{ device[3] if device[3] is not none else '-' }}%</td>
                   <td>{{ device[4] if device[4] is not none else '-' }} dBm</td>
                   <td>{{ device[5][:16].replace('T', ' ') if device[5] else '-' }}</td>
+                  <td>
+                    <form method="post" action="{{ url_for('delete_device') }}" class="d-inline">
+                      <input type="hidden" name="device_id" value="{{ device[0] }}">
+                      <button class="btn btn-outline-danger btn-sm" type="submit" onclick="return confirm('Are you sure you want to delete this device?')">Delete</button>
+                    </form>
+                  </td>
                 </tr>
                 {% endfor %}
               </tbody>
             </table>
           </div>
+          <hr>
+          <h6>Add New Device</h6>
+          <form method=\"post\" action=\"{{ url_for('add_device') }}\" class=\"row g-3\">
+            <div class=\"col-md-4\">
+              <input type=\"text\" name=\"device_id\" class=\"form-control\" placeholder=\"Device ID\" required>
+            </div>
+            <div class=\"col-md-4\">
+              <input type=\"text\" name=\"mac_address\" class=\"form-control\" placeholder=\"MAC Address\" required>
+            </div>
+            <div class=\"col-md-4\">
+              <input type=\"text\" name=\"status\" class=\"form-control\" placeholder=\"Status\" value=\"active\">
+            </div>
+            <div class=\"col-md-3\">
+              <input type=\"number\" name=\"battery_level\" class=\"form-control\" placeholder=\"Battery Level\" min=\"0\" max=\"100\">
+            </div>
+            <div class=\"col-md-3\">
+              <input type=\"number\" name=\"signal_strength\" class=\"form-control\" placeholder=\"Signal Strength\" min=\"-100\" max=\"0\">
+            </div>
+            <div class=\"col-12\">
+              <button type=\"submit\" class=\"btn btn-primary\">Add Device</button>
+            </div>
+          </form>
         </div>
 
         <div class=\"tab-pane fade\" id=\"flights\" role=\"tabpanel\">
@@ -307,6 +346,7 @@ app.jinja_loader = DictLoader(
                   <th>Status</th>
                   <th>Boarding</th>
                   <th class=\"text-end\">Update</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -326,11 +366,116 @@ app.jinja_loader = DictLoader(
                       </div>
                     </form>
                   </td>
+                  <td>
+                    <form method="post" action="{{ url_for('delete_flight') }}" class="d-inline">
+                      <input type="hidden" name="flight_id" value="{{ flight }}">
+                      <button class="btn btn-outline-danger btn-sm" type="submit" onclick="return confirm('Are you sure you want to delete this flight?')">Delete</button>
+                    </form>
+                  </td>
                 </tr>
                 {% endfor %}
               </tbody>
             </table>
           </div>
+          <hr>
+          <h6>Add New Flight</h6>
+          <form method=\"post\" action=\"{{ url_for('add_flight') }}\" class=\"row g-3\">
+            <div class=\"col-md-3\">
+              <input type=\"text\" name=\"flight_id\" class=\"form-control\" placeholder=\"Flight ID\" required>
+            </div>
+            <div class=\"col-md-3\">
+              <input type=\"text\" name=\"boarding_time\" class=\"form-control\" placeholder=\"Boarding Time\" required>
+            </div>
+            <div class=\"col-md-3\">
+              <input type=\"text\" name=\"departure\" class=\"form-control\" placeholder=\"Departure\">
+            </div>
+            <div class=\"col-md-3\">
+              <input type=\"text\" name=\"gate\" class=\"form-control\" placeholder=\"Gate\">
+            </div>
+            <div class=\"col-md-3\">
+              <input type=\"text\" name=\"status\" class=\"form-control\" placeholder=\"Status\" value=\"On Time\">
+            </div>
+            <div class=\"col-md-3\">
+              <input type=\"text\" name=\"aircraft\" class=\"form-control\" placeholder=\"Aircraft\">
+            </div>
+            <div class=\"col-md-3\">
+              <input type=\"text\" name=\"origin\" class=\"form-control\" placeholder=\"Origin\">
+            </div>
+            <div class=\"col-md-3\">
+              <input type=\"text\" name=\"destination\" class=\"form-control\" placeholder=\"Destination\">
+            </div>
+            <div class=\"col-md-3\">
+              <input type=\"text\" name=\"display_time\" class=\"form-control\" placeholder=\"Display Time\">
+            </div>
+            <div class=\"col-12\">
+              <button type=\"submit\" class=\"btn btn-primary\">Add Flight</button>
+            </div>
+          </form>
+        </div>
+
+        <div class=\"tab-pane fade\" id=\"passengers\" role=\"tabpanel\">
+          <h5 class=\"card-title\">Passengers</h5>
+          <p class=\"text-muted\">List of registered passengers.</p>
+          <div class=\"table-responsive\">
+            <table class=\"table table-sm table-hover\">
+              <thead>
+                <tr>
+                  <th>Passenger ID</th>
+                  <th>Name</th>
+                  <th>Ticket Number</th>
+                  <th>Flight ID</th>
+                  <th>Boarding Status</th>
+                  <th>Seat Number</th>
+                  <th>Device ID</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for passenger in passengers %}
+                <tr>
+                  <td>{{ passenger[0] }}</td>
+                  <td>{{ passenger[1] }}</td>
+                  <td>{{ passenger[2] }}</td>
+                  <td>{{ passenger[3] }}</td>
+                  <td>{{ passenger[4] }}</td>
+                  <td>{{ passenger[5] }}</td>
+                  <td>{{ passenger[6] or '-' }}</td>
+                  <td>
+                    <form method="post" action="{{ url_for('delete_passenger') }}" class="d-inline">
+                      <input type="hidden" name="passenger_id" value="{{ passenger[0] }}">
+                      <button class="btn btn-outline-danger btn-sm" type="submit" onclick="return confirm('Are you sure you want to delete this passenger?')">Delete</button>
+                    </form>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <hr>
+          <h6>Add New Passenger</h6>
+          <form method=\"post\" action=\"{{ url_for('add_passenger') }}\" class=\"row g-3\">
+            <div class=\"col-md-6\">
+              <input type=\"text\" name=\"passenger_id\" class=\"form-control\" placeholder=\"Passenger ID\" required>
+            </div>
+            <div class=\"col-md-6\">
+              <input type=\"text\" name=\"name\" class=\"form-control\" placeholder=\"Name\" required>
+            </div>
+            <div class=\"col-md-4\">
+              <input type=\"text\" name=\"ticket_number\" class=\"form-control\" placeholder=\"Ticket Number\">
+            </div>
+            <div class=\"col-md-4\">
+              <input type=\"text\" name=\"flight_id\" class=\"form-control\" placeholder=\"Flight ID\">
+            </div>
+            <div class=\"col-md-4\">
+              <input type=\"text\" name=\"boarding_status\" class=\"form-control\" placeholder=\"Boarding Status\" value=\"Waiting\">
+            </div>
+            <div class=\"col-md-4\">
+              <input type=\"text\" name=\"seat_number\" class=\"form-control\" placeholder=\"Seat Number\">
+            </div>
+            <div class=\"col-12\">
+              <button type=\"submit\" class=\"btn btn-primary\">Add Passenger</button>
+            </div>
+          </form>
         </div>
 
         <div class=\"tab-pane fade\" id=\"notifications\" role=\"tabpanel\">
@@ -341,7 +486,13 @@ app.jinja_loader = DictLoader(
             <div class=\"list-group-item list-group-item-action py-3\">
               <div class=\"d-flex w-100 justify-content-between\">
                 <h6 class=\"mb-1\">{{ n[1] }}</h6>
-                <small class=\"text-muted\">{{ n[3][:16].replace('T', ' ') }}</small>
+                <div>
+                  <small class=\"text-muted\">{{ n[3][:16].replace('T', ' ') }}</small>
+                  <form method="post" action="{{ url_for('delete_notification') }}" class="d-inline ms-2">
+                    <input type="hidden" name="notification_id" value="{{ n[0] }}">
+                    <button class="btn btn-outline-danger btn-sm" type="submit" onclick="return confirm('Are you sure you want to delete this notification?')">Delete</button>
+                  </form>
+                </div>
               </div>
               <small class=\"text-muted\">Type: {{ n[2] }}</small>
             </div>
@@ -350,158 +501,209 @@ app.jinja_loader = DictLoader(
           {% else %}
           <p class=\"text-muted\">No notifications yet.</p>
           {% endif %}
+          <hr>
+          <h6>Add New Notification</h6>
+          <form method=\"post\" action=\"{{ url_for('add_notification') }}\" class=\"row g-3\">
+            <div class=\"col-md-8\">
+              <input type=\"text\" name=\"message\" class=\"form-control\" placeholder=\"Notification Message\" required>
+            </div>
+            <div class=\"col-md-4\">
+              <select name=\"type\" class=\"form-select\">
+                <option value=\"info\">Info</option>
+                <option value=\"warning\">Warning</option>
+                <option value=\"error\">Error</option>
+              </select>
+            </div>
+            <div class=\"col-12\">
+              <button type=\"submit\" class=\"btn btn-primary\">Add Notification</button>
+            </div>
+          </form>
         </div>
-      </div>
-    </div>
-  </div>
-</div>
 {% endblock %}
 """,
     }
 )
 
-DB = os.path.join(os.path.dirname(__file__), "airport.db")
+DB_DIR = os.path.join(os.path.dirname(__file__), "db")
+os.makedirs(DB_DIR, exist_ok=True)
+
+DB_FILES = {
+    "flights": os.path.join(DB_DIR, "flights.db"),
+    "passenger": os.path.join(DB_DIR, "passenger.db"),
+    "devices": os.path.join(DB_DIR, "devices.db"),
+    "notifications": os.path.join(DB_DIR, "notifications.db"),
+    "users": os.path.join(DB_DIR, "users.db"),
+}
 
 # Keep these endpoints open without requiring login.
 NO_AUTH_ENDPOINTS = {"login", "static", "sync"}
 
 
-def init_db():
-    """Ensure required tables exist and seed a default admin user.
+def get_db_connection(db_name: str):
+    """Return a new SQLite connection for the given db name."""
+    path = DB_FILES.get(db_name)
+    if not path:
+        raise ValueError(f"Unknown database name: {db_name}")
+    return sqlite3.connect(path)
 
-    If the database file is corrupted, it is deleted and rebuilt.
+
+def init_db():
+    """Ensure required tables exist and seed data.
+
+    Each major entity lives in its own sqlite file.
     """
 
-    if os.path.exists(DB):
-        try:
-            os.remove(DB)
-        except OSError:
-            pass
+    def init(db_name: str, create_stmts):
+        path = DB_FILES[db_name]
+        # Do not destroy existing database files on startup. Keep existing user/state data.
+        conn = sqlite3.connect(path)
+        cursor = conn.cursor()
+        for stmt in create_stmts:
+            cursor.execute(stmt)
+        conn.commit()
+        conn.close()
 
-    conn = sqlite3.connect(DB)
+    init(
+        "flights",
+        [
+            """
+            CREATE TABLE IF NOT EXISTS flights(
+                flight_id TEXT PRIMARY KEY,
+                boarding_time TEXT,
+                departure TEXT,
+                gate TEXT,
+                status TEXT,
+                aircraft TEXT,
+                origin TEXT,
+                destination TEXT,
+                display_time TEXT,
+                last_update TEXT
+            )
+            """,
+        ],
+    )
+
+    init(
+        "passenger",
+        [
+            """
+            CREATE TABLE IF NOT EXISTS passenger(
+                passenger_id TEXT PRIMARY KEY,
+                name TEXT,
+                ticket_number TEXT,
+                flight_id TEXT,
+                boarding_status TEXT,
+                seat_number TEXT,
+                device_id TEXT
+            )
+            """,
+        ],
+    )
+
+    init(
+        "devices",
+        [
+            """
+            CREATE TABLE IF NOT EXISTS devices(
+                device_id TEXT PRIMARY KEY,
+                mac_address TEXT,
+                status TEXT,
+                battery_level INTEGER,
+                signal_strength INTEGER,
+                last_seen TEXT
+            )
+            """,
+        ],
+    )
+
+    init(
+        "notifications",
+        [
+            """
+            CREATE TABLE IF NOT EXISTS notifications(
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                message TEXT,
+                type TEXT,
+                created_at TEXT
+            )
+            """,
+        ],
+    )
+
+    init(
+        "users",
+        [
+            """
+            CREATE TABLE IF NOT EXISTS users(
+                username TEXT PRIMARY KEY,
+                password_hash TEXT
+            )
+            """,
+        ],
+    )
+
+    # Seed default admin user
+    conn = get_db_connection("users")
     cursor = conn.cursor()
-
-    def ensure_column(table: str, column: str, col_type: str):
-        cursor.execute(f"PRAGMA table_info({table})")
-        columns = [row[1] for row in cursor.fetchall()]
-        if column not in columns:
-            cursor.execute(f"ALTER TABLE {table} ADD COLUMN {column} {col_type}")
-
-    cursor.execute(
-        """
-        CREATE TABLE IF NOT EXISTS flights(
-            flight_id TEXT PRIMARY KEY,
-            boarding_time TEXT
-        )
-        """
-    )
-    ensure_column("flights", "departure", "TEXT")
-    ensure_column("flights", "gate", "TEXT")
-    ensure_column("flights", "status", "TEXT")
-    ensure_column("flights", "aircraft", "TEXT")
-    ensure_column("flights", "origin", "TEXT")
-    ensure_column("flights", "destination", "TEXT")
-    ensure_column("flights", "display_time", "TEXT")
-    ensure_column("flights", "last_update", "TEXT")
-
-    cursor.execute(
-        """
-        CREATE TABLE IF NOT EXISTS passenger(
-            passenger_id TEXT PRIMARY KEY,
-            name TEXT,
-            ticket_number TEXT,
-            flight_id TEXT,
-            boarding_status TEXT
-        )
-        """
-    )
-    ensure_column("passenger", "seat_number", "TEXT")
-
-    cursor.execute(
-        """
-        CREATE TABLE IF NOT EXISTS devices(
-            device_id TEXT PRIMARY KEY,
-            mac_address TEXT
-        )
-        """
-    )
-    ensure_column("devices", "status", "TEXT")
-    ensure_column("devices", "battery_level", "INTEGER")
-    ensure_column("devices", "signal_strength", "INTEGER")
-    ensure_column("devices", "last_seen", "TEXT")
-
-    cursor.execute(
-        """
-        CREATE TABLE IF NOT EXISTS notifications(
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            message TEXT,
-            type TEXT,
-            created_at TEXT
-        )
-        """
-    )
-
-    cursor.execute(
-        """
-        CREATE TABLE IF NOT EXISTS users(
-            username TEXT PRIMARY KEY,
-            password_hash TEXT
-        )
-        """
-    )
-
-    # Seed default admin user (only if not already present)
     password_hash = generate_password_hash(DEFAULT_PASSWORD)
     cursor.execute(
         "INSERT OR REPLACE INTO users(username, password_hash) VALUES (?, ?)",
         (DEFAULT_USERNAME, password_hash),
     )
+    conn.commit()
+    conn.close()
 
-    # Seed sample flights (only if not already present)
-    cursor.execute(
-        "INSERT OR IGNORE INTO flights(flight_id, boarding_time, departure, gate, status, aircraft, origin, destination, display_time, last_update) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        ("AI202", "18:30", "19:00", "Gate 12", "On Time", "Boeing 737", "Delhi", "Mumbai", "18:30", "2023-10-01 10:00:00"),
+    # Seed sample flights
+    conn = get_db_connection("flights")
+    cursor = conn.cursor()
+    cursor.executemany(
+        "INSERT OR IGNORE INTO flights (flight_id, boarding_time, departure, gate, status, aircraft, origin, destination, display_time, last_update) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        [
+            ("AI202", "18:30", "19:00", "Gate 12", "On Time", "Boeing 737", "Delhi", "Mumbai", "18:30", "2023-10-01 10:00:00"),
+            ("AI305", "19:00", "19:30", "Gate 15", "Delayed", "Airbus A320", "Mumbai", "Bangalore", "19:15", "2023-10-01 10:30:00"),
+        ],
     )
-    cursor.execute(
-        "INSERT OR IGNORE INTO flights(flight_id, boarding_time, departure, gate, status, aircraft, origin, destination, display_time, last_update) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        ("AI305", "19:00", "19:30", "Gate 15", "Delayed", "Airbus A320", "Mumbai", "Bangalore", "19:15", "2023-10-01 10:30:00"),
-    )
-    # Ensure sample flight status is populated if row already existed without those columns
-    cursor.execute(
-        "UPDATE flights SET departure = ?, gate = ?, status = ?, aircraft = ?, origin = ?, destination = ?, display_time = ?, last_update = ? WHERE flight_id = ? AND (departure IS NULL OR gate IS NULL OR status IS NULL)",
-        ("19:00", "Gate 12", "On Time", "Boeing 737", "Delhi", "Mumbai", "18:30", "2023-10-01 10:00:00", "AI202"),
-    )
-    cursor.execute(
-        "UPDATE flights SET departure = ?, gate = ?, status = ?, aircraft = ?, origin = ?, destination = ?, display_time = ?, last_update = ? WHERE flight_id = ? AND (departure IS NULL OR gate IS NULL OR status IS NULL)",
-        ("19:30", "Gate 15", "Delayed", "Airbus A320", "Mumbai", "Bangalore", "19:15", "2023-10-01 10:30:00", "AI305"),
-    )
+    conn.commit()
+    conn.close()
 
-    # Seed sample passengers (only if not already present)
-    cursor.execute(
-        "INSERT OR IGNORE INTO passenger(passenger_id, name, ticket_number, flight_id, boarding_status, seat_number) VALUES (?, ?, ?, ?, ?, ?)",
-        ("TB2376", "Thiru", "TB2376", "AI202", "Boarded", "12B"),
+    # Seed sample passengers (no device assignment here; devices seeded separately)
+    conn = get_db_connection("passenger")
+    cursor = conn.cursor()
+    cursor.executemany(
+        "INSERT OR IGNORE INTO passenger (passenger_id, name, ticket_number, flight_id, boarding_status, seat_number, device_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        [
+            ("TB2376", "Thiru", "TB2376", "AI202", "Boarded", "12B", None),
+            ("AB1234", "John Doe", "AB1234", "AI305", "Waiting", "14A", None),
+        ],
     )
-    cursor.execute(
-        "INSERT OR IGNORE INTO passenger(passenger_id, name, ticket_number, flight_id, boarding_status, seat_number) VALUES (?, ?, ?, ?, ?, ?)",
-        ("AB1234", "John Doe", "AB1234", "AI305", "Waiting", "14A"),
-    )
+    conn.commit()
+    conn.close()
 
-    # Seed sample devices (only if not already present)
-    cursor.execute(
-        "INSERT OR IGNORE INTO devices(device_id, mac_address, status, battery_level, signal_strength, last_seen) VALUES (?, ?, ?, ?, ?, ?)",
-        ("DEV001", "08:3A:F2:A8:31:F8", "active", 95, -45, datetime.datetime.now().isoformat()),
+    # Seed sample devices
+    conn = get_db_connection("devices")
+    cursor = conn.cursor()
+    devices_data = []
+    for i in range(1, 31):  # DEV001 to DEV030
+        device_id = f"DEV{i:03d}"
+        mac_address = f"08:3A:F2:A8:31:{i:02X}"
+        devices_data.append((device_id, mac_address, "active", 95, -45, datetime.datetime.now().isoformat()))
+    cursor.executemany(
+        "INSERT OR IGNORE INTO devices (device_id, mac_address, status, battery_level, signal_strength, last_seen) VALUES (?, ?, ?, ?, ?, ?)",
+        devices_data,
     )
+    conn.commit()
+    conn.close()
 
-    # Seed sample notifications (only if not already present)
-    cursor.execute(
-        "INSERT OR IGNORE INTO notifications(message, type, created_at) VALUES (?, ?, ?)",
-        ("Flight AI202 boarding now", "info", datetime.datetime.now().isoformat()),
+    # Seed sample notifications
+    conn = get_db_connection("notifications")
+    cursor = conn.cursor()
+    cursor.executemany(
+        "INSERT OR IGNORE INTO notifications (message, type, created_at) VALUES (?, ?, ?)",
+        [
+            ("Flight AI202 boarding now", "info", datetime.datetime.now().isoformat()),
+            ("Device DEV001 battery low", "warning", datetime.datetime.now().isoformat()),
+        ],
     )
-    cursor.execute(
-        "INSERT OR IGNORE INTO notifications(message, type, created_at) VALUES (?, ?, ?)",
-        ("Device DEV001 battery low", "warning", datetime.datetime.now().isoformat()),
-    )
-
     conn.commit()
     conn.close()
 
@@ -519,11 +721,6 @@ def require_login():
 
     if "user" not in session:
         return redirect(url_for("login"))
-
-
-def get_db_connection():
-    """Return a new SQLite connection."""
-    return sqlite3.connect(DB)
 
 
 def login_required(view):
@@ -549,7 +746,7 @@ def login():
         username = request.form.get("username")
         password = request.form.get("password")
 
-        conn = get_db_connection()
+        conn = get_db_connection("users")
         cursor = conn.cursor()
         cursor.execute("SELECT password_hash FROM users WHERE username=?", (username,))
         row = cursor.fetchone()
@@ -579,24 +776,37 @@ def logout():
 @login_required
 def dashboard():
     """Dashboard showing flights, devices, and notifications."""
-    conn = get_db_connection()
-    cursor = conn.cursor()
 
+    # Devices
+    conn = get_db_connection("devices")
+    cursor = conn.cursor()
     cursor.execute("SELECT COUNT(*) FROM devices")
     total_devices = cursor.fetchone()[0]
-
-    cursor.execute("SELECT COUNT(*) FROM flights")
-    total_flights = cursor.fetchone()[0]
-
     cursor.execute("SELECT device_id, mac_address, status, battery_level, signal_strength, last_seen FROM devices")
     devices = cursor.fetchall()
+    conn.close()
 
+    # Flights
+    conn = get_db_connection("flights")
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM flights")
+    total_flights = cursor.fetchone()[0]
     cursor.execute("SELECT flight_id, boarding_time, departure, gate, status FROM flights ORDER BY flight_id")
     flights = cursor.fetchall()
+    conn.close()
 
+    # Notifications
+    conn = get_db_connection("notifications")
+    cursor = conn.cursor()
     cursor.execute("SELECT id, message, type, created_at FROM notifications ORDER BY id DESC LIMIT 10")
     notifications = cursor.fetchall()
+    conn.close()
 
+    # Passengers
+    conn = get_db_connection("passenger")
+    cursor = conn.cursor()
+    cursor.execute("SELECT passenger_id, name, ticket_number, flight_id, boarding_status, seat_number, device_id FROM passenger ORDER BY passenger_id")
+    passengers = cursor.fetchall()
     conn.close()
 
     return render_template_string(
@@ -607,6 +817,8 @@ def dashboard():
         devices=devices,
         notifications=notifications,
         flights=flights,
+        passengers=passengers,
+        passenger=None,
         current_year=datetime.datetime.now().year,
     )
 
@@ -616,29 +828,73 @@ def dashboard():
 def search():
     pnr = request.form.get("pnr")
 
-    conn = get_db_connection()
+    if not pnr:
+        flash("PNR is required", "danger")
+        return redirect(url_for("dashboard"))
+
+    # Devices
+    conn = get_db_connection("devices")
     cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM devices")
+    total_devices = cursor.fetchone()[0]
+    cursor.execute("SELECT device_id, mac_address, status, battery_level, signal_strength, last_seen FROM devices")
+    devices = cursor.fetchall()
+    conn.close()
+
+    # Flights
+    conn = get_db_connection("flights")
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM flights")
+    total_flights = cursor.fetchone()[0]
+    cursor.execute("SELECT flight_id, boarding_time, departure, gate, status FROM flights ORDER BY flight_id")
+    flights = cursor.fetchall()
+    conn.close()
+
+    # Notifications
+    conn = get_db_connection("notifications")
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, message, type, created_at FROM notifications ORDER BY id DESC LIMIT 10")
+    notifications = cursor.fetchall()
+    conn.close()
+
+    # Passengers
+    conn = get_db_connection("passenger")
+    cursor = conn.cursor()
+    cursor.execute("SELECT passenger_id, name, ticket_number, flight_id, boarding_status, seat_number, device_id FROM passenger ORDER BY passenger_id")
+    passengers = cursor.fetchall()
 
     cursor.execute(
-        """
-        SELECT passenger.passenger_id,
-               passenger.name,
-               passenger.flight_id,
-               passenger.seat_number,
-               flights.boarding_time
-        FROM passenger
-        JOIN flights ON passenger.flight_id = flights.flight_id
-        WHERE passenger.passenger_id = ?
-        """,
+        "SELECT passenger_id, name, flight_id, seat_number, device_id FROM passenger WHERE passenger_id = ?",
         (pnr,),
     )
-
     passenger = cursor.fetchone()
     conn.close()
 
+    boarding_time = None
+    if passenger:
+        # Lookup boarding_time from flights DB
+        conn = get_db_connection("flights")
+        cursor = conn.cursor()
+        cursor.execute("SELECT boarding_time FROM flights WHERE flight_id = ?", (passenger[2],))
+        row = cursor.fetchone()
+        conn.close()
+        boarding_time = row[0] if row else None
+
+        # Convert tuple to match template expectations (passenger[0..4])
+        passenger = (passenger[0], passenger[1], passenger[2], passenger[3], boarding_time, passenger[4])
+
+    if not passenger:
+        flash(f"No passenger found with PNR: {pnr}", "warning")
+
     return render_template_string(
         "{% include 'dashboard.html' %}",
-        flights=[],
+        total_devices=total_devices,
+        active_devices=total_devices,
+        total_flights=total_flights,
+        devices=devices,
+        notifications=notifications,
+        flights=flights,
+        passengers=passengers,
         passenger=passenger,
         search_pnr=pnr,
         current_year=datetime.datetime.now().year,
@@ -654,53 +910,54 @@ def sync():
     mac = data.get("device_id")
     pnr = data.get("pnr")
 
-    conn = get_db_connection()
+    # Device lookup
+    conn = get_db_connection("devices")
     cursor = conn.cursor()
-
-    cursor.execute(
-        "SELECT device_id FROM devices WHERE mac_address=?",
-        (mac,)
-    )
+    cursor.execute("SELECT device_id FROM devices WHERE mac_address=?", (mac,))
     device = cursor.fetchone()
-
-    cursor.execute(
-        """
-        SELECT passenger.passenger_id,
-               passenger.name,
-               passenger.flight_id,
-               passenger.seat_number,
-               flights.boarding_time
-        FROM passenger
-        JOIN flights
-        ON passenger.flight_id = flights.flight_id
-        WHERE passenger.passenger_id = ?
-        """,
-        (pnr,),
-    )
-
-    result = cursor.fetchone()
-
     conn.close()
 
-    if device and result:
-        return jsonify(
-            {
-                "device_id": device[0],
-                "pnr": result[0],
-                "name": result[1],
-                "flight": result[2],
-                "seat": result[3],
-                "boarding_time": result[4],
-            }
-        )
+    if not device:
+        return jsonify({"message": "Device not found"}), 404
 
-    return jsonify({"message": "Passenger or device not found"})
+    # Passenger lookup
+    conn = get_db_connection("passenger")
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT passenger_id, name, flight_id, seat_number, device_id FROM passenger WHERE passenger_id = ?",
+        (pnr,),
+    )
+    passenger = cursor.fetchone()
+    conn.close()
+
+    if not passenger:
+        return jsonify({"message": "Passenger not found"}), 404
+
+    # Flight boarding time lookup
+    conn = get_db_connection("flights")
+    cursor = conn.cursor()
+    cursor.execute("SELECT boarding_time FROM flights WHERE flight_id = ?", (passenger[2],))
+    flight_row = cursor.fetchone()
+    conn.close()
+
+    boarding_time = flight_row[0] if flight_row else None
+
+    return jsonify(
+        {
+            "device_id": device[0],
+            "pnr": passenger[0],
+            "name": passenger[1],
+            "flight": passenger[2],
+            "seat": passenger[3],
+            "boarding_time": boarding_time,
+        }
+    )
 
 
 @app.route("/flights")
 @login_required
 def flights():
-    conn = get_db_connection()
+    conn = get_db_connection("flights")
     cursor = conn.cursor()
 
     cursor.execute("SELECT flight_id, boarding_time, departure, gate, status, aircraft, origin, destination, display_time, last_update FROM flights")
@@ -730,30 +987,28 @@ def flights():
 @app.route("/passenger/<pnr>")
 @login_required
 def passenger(pnr):
-    conn = get_db_connection()
+    conn = get_db_connection("passenger")
     cursor = conn.cursor()
 
     cursor.execute(
-        """
-        SELECT passenger.passenger_id,
-               passenger.name,
-               passenger.flight_id,
-               passenger.seat_number,
-               flights.boarding_time
-        FROM passenger
-        JOIN flights
-        ON passenger.flight_id = flights.flight_id
-        WHERE passenger.passenger_id = ?
-        """,
+        "SELECT passenger_id, name, flight_id, seat_number, device_id FROM passenger WHERE passenger_id = ?",
         (pnr,),
     )
 
     data = cursor.fetchone()
-
     conn.close()
 
     if not data:
         return jsonify({"message": "Passenger not found"}), 404
+
+    # Get boarding time from flights db
+    conn = get_db_connection("flights")
+    cursor = conn.cursor()
+    cursor.execute("SELECT boarding_time FROM flights WHERE flight_id = ?", (data[2],))
+    flight_row = cursor.fetchone()
+    conn.close()
+
+    boarding_time = flight_row[0] if flight_row else None
 
     return jsonify(
         {
@@ -761,9 +1016,134 @@ def passenger(pnr):
             "name": data[1],
             "flight": data[2],
             "seat": data[3],
-            "boarding_time": data[4],
+            "boarding_time": boarding_time,
+            "device_id": data[4],
         }
     )
+
+
+@app.route("/add_flight", methods=["POST"])
+@login_required
+def add_flight():
+    flight_id = request.form.get("flight_id")
+    boarding_time = request.form.get("boarding_time")
+    departure = request.form.get("departure")
+    gate = request.form.get("gate")
+    status = request.form.get("status")
+    aircraft = request.form.get("aircraft")
+    origin = request.form.get("origin")
+    destination = request.form.get("destination")
+    display_time = request.form.get("display_time")
+
+    if not flight_id:
+        flash("Flight ID is required", "danger")
+        return redirect(url_for("dashboard"))
+
+    conn = get_db_connection("flights")
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "INSERT OR REPLACE INTO flights (flight_id, boarding_time, departure, gate, status, aircraft, origin, destination, display_time, last_update) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (flight_id, boarding_time, departure, gate, status, aircraft, origin, destination, display_time, datetime.datetime.now().isoformat()),
+    )
+
+    conn.commit()
+    conn.close()
+
+    flash(f"Flight {flight_id} added/updated", "success")
+    return redirect(url_for("dashboard"))
+
+
+@app.route("/add_device", methods=["POST"])
+@login_required
+def add_device():
+    device_id = request.form.get("device_id")
+    mac_address = request.form.get("mac_address")
+    status = request.form.get("status")
+    battery_level = request.form.get("battery_level")
+    signal_strength = request.form.get("signal_strength")
+
+    if not device_id or not mac_address:
+        flash("Device ID and MAC Address are required", "danger")
+        return redirect(url_for("dashboard"))
+
+    conn = get_db_connection("devices")
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "INSERT OR REPLACE INTO devices (device_id, mac_address, status, battery_level, signal_strength, last_seen) VALUES (?, ?, ?, ?, ?, ?)",
+        (device_id, mac_address, status, battery_level, signal_strength, datetime.datetime.now().isoformat()),
+    )
+
+    conn.commit()
+    conn.close()
+
+    flash(f"Device {device_id} added/updated", "success")
+    return redirect(url_for("dashboard"))
+
+
+@app.route("/add_notification", methods=["POST"])
+@login_required
+def add_notification():
+    message = request.form.get("message")
+    n_type = request.form.get("type")
+
+    if not message:
+        flash("Message is required", "danger")
+        return redirect(url_for("dashboard"))
+
+    conn = get_db_connection("notifications")
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "INSERT INTO notifications (message, type, created_at) VALUES (?, ?, ?)",
+        (message, n_type or "info", datetime.datetime.now().isoformat()),
+    )
+
+    conn.commit()
+    conn.close()
+
+    flash("Notification added", "success")
+    return redirect(url_for("dashboard"))
+
+
+@app.route("/add_passenger", methods=["POST"])
+@login_required
+def add_passenger():
+    passenger_id = request.form.get("passenger_id")
+    name = request.form.get("name")
+    ticket_number = request.form.get("ticket_number")
+    flight_id = request.form.get("flight_id")
+    boarding_status = request.form.get("boarding_status")
+    seat_number = request.form.get("seat_number")
+
+    if not passenger_id or not name:
+        flash("Passenger ID and Name are required", "danger")
+        return redirect(url_for("dashboard"))
+
+    conn = get_db_connection("passenger")
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "INSERT OR REPLACE INTO passenger (passenger_id, name, ticket_number, flight_id, boarding_status, seat_number) VALUES (?, ?, ?, ?, ?, ?)",
+        (passenger_id, name, ticket_number, flight_id, boarding_status, seat_number),
+    )
+
+    # Automatically assign an available device
+    cursor.execute("SELECT device_id FROM devices WHERE status = 'active' LIMIT 1")
+    available_device = cursor.fetchone()
+    if available_device:
+        device_id = available_device[0]
+        cursor.execute("UPDATE passenger SET device_id = ? WHERE passenger_id = ?", (device_id, passenger_id))
+        cursor.execute("UPDATE devices SET status = 'assigned' WHERE device_id = ?", (device_id,))
+        flash(f"Passenger {passenger_id} added/updated and assigned device {device_id}", "success")
+    else:
+        flash(f"Passenger {passenger_id} added/updated, but no available device to assign", "warning")
+
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for("dashboard"))
 
 
 @app.route("/update", methods=["POST"])
@@ -773,26 +1153,278 @@ def update():
     new_time = request.form.get("new_time")
 
     if not flight or not new_time:
-        flash("Flight and new boarding time are required", "danger")
+        flash("Flight and new time are required", "danger")
         return redirect(url_for("dashboard"))
 
-    conn = get_db_connection()
+    conn = get_db_connection("flights")
     cursor = conn.cursor()
 
-    cursor.execute(
-        "UPDATE flights SET boarding_time=? WHERE flight_id=?",
-        (new_time, flight),
-    )
+    cursor.execute("UPDATE flights SET boarding_time = ? WHERE flight_id = ?", (new_time, flight))
 
     conn.commit()
     conn.close()
 
-    flash(f"Boarding time for {flight} updated to {new_time}", "success")
+    flash(f"Flight {flight} boarding time updated", "success")
     return redirect(url_for("dashboard"))
 
 
+@app.route("/delete_device", methods=["POST"])
+@login_required
+def delete_device():
+    device_id = request.form.get("device_id")
+
+    if not device_id:
+        flash("Device ID is required", "danger")
+        return redirect(url_for("dashboard"))
+
+    conn = get_db_connection("devices")
+    cursor = conn.cursor()
+
+    cursor.execute("DELETE FROM devices WHERE device_id = ?", (device_id,))
+
+    conn.commit()
+    conn.close()
+
+    flash(f"Device {device_id} deleted", "success")
+    return redirect(url_for("dashboard"))
+
+
+@app.route("/delete_flight", methods=["POST"])
+@login_required
+def delete_flight():
+    flight_id = request.form.get("flight_id")
+
+    if not flight_id:
+        flash("Flight ID is required", "danger")
+        return redirect(url_for("dashboard"))
+
+    conn = get_db_connection("flights")
+    cursor = conn.cursor()
+
+    cursor.execute("DELETE FROM flights WHERE flight_id = ?", (flight_id,))
+
+    conn.commit()
+    conn.close()
+
+    flash(f"Flight {flight_id} deleted", "success")
+    return redirect(url_for("dashboard"))
+
+
+@app.route("/delete_passenger", methods=["POST"])
+@login_required
+def delete_passenger():
+    passenger_id = request.form.get("passenger_id")
+
+    if not passenger_id:
+        flash("Passenger ID is required", "danger")
+        return redirect(url_for("dashboard"))
+
+    conn = get_db_connection("passenger")
+    cursor = conn.cursor()
+
+    # Get the device_id before deleting
+    cursor.execute("SELECT device_id FROM passenger WHERE passenger_id = ?", (passenger_id,))
+    row = cursor.fetchone()
+    device_id = row[0] if row else None
+
+    cursor.execute("DELETE FROM passenger WHERE passenger_id = ?", (passenger_id,))
+
+    # If device was assigned, set it back to active
+    if device_id:
+        conn_devices = get_db_connection("devices")
+        cursor_devices = conn_devices.cursor()
+        cursor_devices.execute("UPDATE devices SET status = 'active' WHERE device_id = ?", (device_id,))
+        conn_devices.commit()
+        conn_devices.close()
+
+    conn.commit()
+    conn.close()
+
+    flash(f"Passenger {passenger_id} deleted", "success")
+    return redirect(url_for("dashboard"))
+
+
+@app.route("/delete_notification", methods=["POST"])
+@login_required
+def delete_notification():
+    notification_id = request.form.get("notification_id")
+
+    if not notification_id:
+        flash("Notification ID is required", "danger")
+        return redirect(url_for("dashboard"))
+
+    conn = get_db_connection("notifications")
+    cursor = conn.cursor()
+
+    cursor.execute("DELETE FROM notifications WHERE id = ?", (notification_id,))
+
+    conn.commit()
+    conn.close()
+
+    flash(f"Notification deleted", "success")
+    return redirect(url_for("dashboard"))
+
+
+# ============ ESP32 API Endpoints ============
+
+@app.route("/api/esp32/register", methods=["POST"])
+def esp32_register():
+    """Register a new ESP32 device"""
+    data = request.get_json()
+    
+    if not data or "device_id" not in data or "mac_address" not in data:
+        return jsonify({"error": "device_id and mac_address required"}), 400
+    
+    device_id = data.get("device_id")
+    mac_address = data.get("mac_address")
+    
+    conn = get_db_connection("devices")
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute("""
+            INSERT OR REPLACE INTO devices 
+            (device_id, mac_address, status, battery_level, signal_strength, last_seen) 
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (device_id, mac_address, "online", 100, 0, datetime.datetime.now().isoformat()))
+        
+        conn.commit()
+        return jsonify({"success": True, "message": f"Device {device_id} registered"}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
+
+
+@app.route("/api/esp32/data", methods=["POST"])
+def esp32_send_data():
+    """Receive sensor data from ESP32"""
+    data = request.get_json()
+    
+    if not data or "device_id" not in data:
+        return jsonify({"error": "device_id required"}), 400
+    
+    device_id = data.get("device_id")
+    sensors = data.get("sensors", [])
+    battery_level = data.get("battery_level", 100)
+    signal_strength = data.get("signal_strength", 0)
+    
+    try:
+        # Update device status
+        conn_dev = get_db_connection("devices")
+        cursor_dev = conn_dev.cursor()
+        cursor_dev.execute("""
+            UPDATE devices 
+            SET status = ?, battery_level = ?, signal_strength = ?, last_seen = ?
+            WHERE device_id = ?
+        """, ("online", battery_level, signal_strength, datetime.datetime.now().isoformat(), device_id))
+        conn_dev.commit()
+        conn_dev.close()
+        
+        # Save sensor data
+        conn_sensor = get_db_connection("sensor_data")
+        cursor_sensor = conn_sensor.cursor()
+        
+        for sensor in sensors:
+            sensor_type = sensor.get("type")
+            value = sensor.get("value")
+            unit = sensor.get("unit", "")
+            
+            cursor_sensor.execute("""
+                INSERT INTO sensor_data (device_id, sensor_type, value, unit, timestamp)
+                VALUES (?, ?, ?, ?, ?)
+            """, (device_id, sensor_type, value, unit, datetime.datetime.now().isoformat()))
+        
+        conn_sensor.commit()
+        conn_sensor.close()
+        
+        return jsonify({"success": True, "message": f"Data saved for {device_id}"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/esp32/devices", methods=["GET"])
+def esp32_get_devices():
+    """Get list of all ESP32 devices"""
+    try:
+        conn = get_db_connection("devices")
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM devices")
+        devices = cursor.fetchall()
+        conn.close()
+        
+        devices_list = []
+        for device in devices:
+            devices_list.append({
+                "device_id": device[0],
+                "mac_address": device[1],
+                "status": device[2],
+                "battery_level": device[3],
+                "signal_strength": device[4],
+                "last_seen": device[5]
+            })
+        
+        return jsonify({"devices": devices_list}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/esp32/config", methods=["POST"])
+def esp32_get_config():
+    """Get configuration for ESP32 (e.g., server URL, polling interval)"""
+    data = request.get_json()
+    device_id = data.get("device_id") if data else None
+    
+    config = {
+        "server_url": request.host_url,
+        "api_endpoints": {
+            "register": "/api/esp32/register",
+            "data": "/api/esp32/data",
+            "devices": "/api/esp32/devices"
+        },
+        "polling_interval": 5,  # seconds
+        "sensors": [
+            {"type": "temperature", "pin": 32, "unit": "°C"},
+            {"type": "humidity", "pin": 33, "unit": "%"}
+        ]
+    }
+    
+    return jsonify(config), 200
+
+
+@app.errorhandler(500)
+def internal_server_error(e):
+    """Log unhandled errors so they can be inspected from the filesystem."""
+    import traceback
+
+    tb = "".join(traceback.format_exception(type(e), e, e.__traceback__))
+    log_path = os.path.join(os.path.dirname(__file__), "error.log")
+    try:
+        with open(log_path, "a", encoding="utf-8") as f:
+            f.write(f"{datetime.datetime.now().isoformat()} - 500\n")
+            f.write(tb)
+            f.write("\n---\n")
+    except:
+        pass  # If logging fails, continue to return the traceback
+
+    # For debugging, return the traceback in the response
+    return f"<pre>{tb}</pre>", 500
+
+
 if __name__ == "__main__":
-    # Bind to localhost only so the server is not reachable from other machines.
-    # If you want to allow access from other devices on the same network, change
-    # host to "0.0.0.0" and ensure the machine has proper network/firewall controls.
-    app.run(host="127.0.0.1", port=7000, debug=True)
+    # Server is accessible from other devices on the network for ESP32 communication
+    # Make sure to use a firewall if on a public network
+    print("\n" + "="*60)
+    print("Airport Smart Band Server - ESP32 Compatible")
+    print("="*60)
+    print("\nServer running on: http://0.0.0.0:7000")
+    print("Access from this machine: http://localhost:7000")
+    print("Access from ESP32 devices: http://<your-pc-ip>:7000")
+    print("\nESP32 API Endpoints:")
+    print("  - POST /api/esp32/register")
+    print("  - POST /api/esp32/data")
+    print("  - GET  /api/esp32/devices")
+    print("  - POST /api/esp32/config")
+    print("="*60 + "\n")
+    
+    app.run(host="0.0.0.0", port=7000, debug=True)

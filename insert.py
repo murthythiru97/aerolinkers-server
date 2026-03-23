@@ -1,59 +1,74 @@
+﻿import os
 import sqlite3
 from werkzeug.security import generate_password_hash
 
-conn = sqlite3.connect("airport.db")
-cursor = conn.cursor()
+DB_DIR = os.path.join(os.path.dirname(__file__), "db")
 
-flights = [
-    ("AI202", "18:30", "19:00", "Gate 12", "On Time", "Boeing 737", "Delhi", "Mumbai", "18:30", "2023-10-01 10:00:00"),
-    ("AI305", "19:00", "19:30", "Gate 15", "Delayed", "Airbus A320", "Mumbai", "Bangalore", "19:15", "2023-10-01 10:30:00")
-]
+DB_PATHS = {
+    "flights": os.path.join(DB_DIR, "flights.db"),
+    "passenger": os.path.join(DB_DIR, "passenger.db"),
+    "devices": os.path.join(DB_DIR, "devices.db"),
+    "notifications": os.path.join(DB_DIR, "notifications.db"),
+    "users": os.path.join(DB_DIR, "users.db"),
+}
 
-cursor.executemany(
-    "INSERT OR IGNORE INTO flights VALUES (?,?,?,?,?,?,?,?,?,?)",
-    flights
-)
 
-passengers = [
-    ("TB2376", "THIRU", "TB2376", "AI202", "Boarded", "12B"),
-    ("AB1234", "John Doe", "AB1234", "AI305", "Waiting", "14A")
-]
+def _insert_rows(db_name: str, sql: str, rows: list):
+    conn = sqlite3.connect(DB_PATHS[db_name])
+    cursor = conn.cursor()
+    cursor.executemany(sql, rows)
+    conn.commit()
+    conn.close()
 
-cursor.executemany(
-    "INSERT OR IGNORE INTO passenger VALUES (?,?,?,?,?,?)",
-    passengers
-)
 
-devices = [
-    ("DEV001", "08:3A:F2:A8:31:F8", "Online", 85, 90, "2023-10-01 10:00:00"),
-    ("DEV002", "08:3A:F2:A8:31:F9", "Offline", 20, 30, "2023-10-01 09:00:00")
-]
+def main():
+    _insert_rows(
+        "flights",
+        "INSERT OR IGNORE INTO flights (flight_id, boarding_time, departure, gate, status, aircraft, origin, destination, display_time, last_update) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        [
+            ("AI202", "18:30", "19:00", "Gate 12", "On Time", "Boeing 737", "Delhi", "Mumbai", "18:30", "2023-10-01 10:00:00"),
+            ("AI305", "19:00", "19:30", "Gate 15", "Delayed", "Airbus A320", "Mumbai", "Bangalore", "19:15", "2023-10-01 10:30:00"),
+        ],
+    )
 
-cursor.executemany(
-    "INSERT OR IGNORE INTO devices VALUES (?,?,?,?,?,?)",
-    devices
-)
+    _insert_rows(
+        "passenger",
+        "INSERT OR IGNORE INTO passenger (passenger_id, name, ticket_number, flight_id, boarding_status, seat_number, device_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        [
+            ("TB2376", "Thiru", "TB2376", "AI202", "Boarded", "12B", None),
+            ("AB1234", "John Doe", "AB1234", "AI305", "Waiting", "14A", None),
+        ],
+    )
 
-notifications = [
-    (1, "Flight AI202 boarding now", "info", "2023-10-01 10:00:00"),
-    (2, "Device DEV001 battery low", "warning", "2023-10-01 09:30:00")
-]
+    devices = []
+    for i in range(1, 31):
+        device_id = f"DEV{i:03d}"
+        mac_address = f"08:3A:F2:A8:31:{i:02X}"
+        devices.append((device_id, mac_address, "active", 95, -45, "2023-10-01 10:00:00"))
 
-cursor.executemany(
-    "INSERT OR IGNORE INTO notifications VALUES (?,?,?,?)",
-    notifications
-)
+    _insert_rows(
+        "devices",
+        "INSERT OR IGNORE INTO devices (device_id, mac_address, status, battery_level, signal_strength, last_seen) VALUES (?, ?, ?, ?, ?, ?)",
+        devices,
+    )
 
-users = [
-    ("Aerolinkers", generate_password_hash("Aerolinkers123"))
-]
+    _insert_rows(
+        "notifications",
+        "INSERT OR IGNORE INTO notifications (message, type, created_at) VALUES (?, ?, ?)",
+        [
+            ("Flight AI202 boarding now", "info", "2023-10-01 10:00:00"),
+            ("Device DEV001 battery low", "warning", "2023-10-01 09:30:00"),
+        ],
+    )
 
-cursor.executemany(
-    "INSERT OR IGNORE INTO users VALUES (?,?)",
-    users
-)
+    _insert_rows(
+        "users",
+        "INSERT OR IGNORE INTO users (username, password_hash) VALUES (?, ?)",
+        [("Aerolinkers", generate_password_hash("Aerolinkers123"))],
+    )
 
-conn.commit()
-conn.close()
+    print("Data inserted")
 
-print("Data inserted")
+
+if __name__ == "__main__":
+    main()
