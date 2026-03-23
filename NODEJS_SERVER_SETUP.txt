@@ -1,0 +1,111 @@
+================================================================================
+AIRPORT SMART BAND (ATAB) - Node.js + Express Server Setup
+================================================================================
+
+PROJECT STRUCTURE:
+================================================================================
+
+atab-server/
+├── config/
+│   ├── database.js           # PostgreSQL connection
+│   ├── minio.js              # MinIO storage config
+│   └── environment.js        # Environment variables
+├── models/
+│   ├── Device.js             # Device model
+│   ├── Passenger.js          # Passenger model
+│   ├── Flight.js             # Flight model
+│   ├── Notification.js       # Notification model
+│   └── Audio.js              # Audio file metadata
+├── routes/
+│   ├── device.routes.js      # Device APIs
+│   ├── passenger.routes.js   # Passenger APIs
+│   ├── flight.routes.js      # Flight APIs
+│   ├── notification.routes.js # Notification APIs
+│   └── audio.routes.js       # Audio file APIs
+├── controllers/
+│   ├── deviceController.js
+│   ├── passengerController.js
+│   ├── flightController.js
+│   ├── notificationController.js
+│   └── audioController.js
+├── middleware/
+│   ├── auth.js               # Authentication middleware
+│   └── errorHandler.js       # Error handling
+├── utils/
+│   ├── logger.js             # Logging utility
+│   └── validators.js         # Input validation
+├── app.js                    # Express app setup
+├── server.js                 # Server entry point
+├── .env                      # Environment variables
+└── package.json              # Dependencies
+
+================================================================================
+STEP 1: INITIALIZE PROJECT
+================================================================================
+
+1. Create project folder:
+   mkdir atab-server
+   cd atab-server
+
+2. Initialize Node.js:
+   npm init -y
+
+3. Install dependencies:
+   npm install express sequelize pg pg-hstore dotenv multer minio cors helmet
+
+   # For development:
+   npm install --save-dev nodemon
+
+================================================================================
+DEPENDENCIES EXPLANATION:
+================================================================================
+
+express       - Web framework
+sequelize     - ORM for PostgreSQL
+pg pg-hstore  - PostgreSQL drivers
+dotenv        - Environment variable management
+multer        - File upload handling
+minio         - Object storage (like AWS S3)
+cors          - Cross-Origin Resource Sharing
+helmet        - Security headers
+nodemon       - Auto-restart during development
+
+================================================================================
+STEP 2: CREATE DATABASE (PostgreSQL)
+================================================================================
+
+Install PostgreSQL:
+  Windows: https://www.postgresql.org/download/windows/
+  Mac:     brew install postgresql@15
+  Linux:   sudo apt-get install postgresql postgresql-contrib
+
+Create database:
+  psql -U postgres
+  
+  CREATE DATABASE atab_db;
+  CREATE USER atab_user WITH PASSWORD 'secure_password_here';
+  ALTER ROLE atab_user SET client_encoding TO 'utf8';
+  ALTER ROLE atab_user SET default_transaction_isolation TO 'read committed';
+  ALTER ROLE atab_user SET default_transaction_deferrable TO on;
+  ALTER ROLE atab_user SET default_transaction_read_only TO off;
+  GRANT ALL PRIVILEGES ON DATABASE atab_db TO atab_user;
+  
+  \q (quit)
+
+================================================================================
+STEP 3: CREATE MINIO BUCKET (Object Storage)
+================================================================================
+
+Install MinIO:
+  Windows: Download from https://minio.io/download/
+  
+Create bucket:
+  minio server C:\minio-data
+  
+  Access: http://localhost:9000
+  Username: minioadmin
+  Password: minioadmin
+  
+  Create bucket: "atab-audio"
+
+================================================================================
